@@ -81,12 +81,12 @@ def circles(image: np.ndarray, values: list[int], num_of_circles: int) -> np.nda
 
 
 def __draw_circles(
-    image: np.array,
+    image: np.ndarray,
     grid_shape: tuple[int, int],
     grid_position: tuple[int, int],
     displacement: tuple[int, int],
     value: int,
-):
+) -> tuple[np.ndarray, float]:
     """Draws circles in the grid.
 
     Args:
@@ -115,12 +115,12 @@ def __draw_circles(
 
 
 def __draw_square(
-    image: np.array,
+    image: np.ndarray,
     grid_shape: tuple[int, int],
     grid_position: tuple[int, int],
     displacement: tuple[int, int],
     value: int,
-):
+) -> tuple[np.ndarray, int]:
     """Draws squares in the grid.
 
     Args:
@@ -150,12 +150,12 @@ def __draw_square(
 
 
 def __draw_crosses(
-    image: np.array,
+    image: np.ndarray,
     grid_shape: tuple[int, int],
     grid_position: tuple[int, int],
     displacement: tuple[int, int],
     value: int,
-):
+) -> tuple[np.ndarray, int]:
     """Draws crosses in the grid.
 
     Args:
@@ -201,7 +201,20 @@ def __draw_crosses(
     return image, ((short_side * long_side) - short_side**2)
 
 
-def grid_calculation(used: set, num_grid: int, grid_shape: tuple[int, int]):
+def grid_calculation(
+    used: set, num_grid: int, grid_shape: tuple[int, int]
+) -> tuple[tuple[int, int], set]:
+    """Calculates the position of the grid.
+
+    Args:
+        used: Set of integers representing the positions already used.
+        num_grid: Integer representing the total number of cell of the grid.
+        grid_shape: Tuple of integers representing the shape of the grid.
+
+    Returns:
+        Tuple of integers representing the position of the grid.
+        Set of integers representing the positions already used.
+    """
     i = random.randint(0, (num_grid**2) - 1)
     while i in used:
         i = random.randint(0, num_grid**2)
@@ -224,7 +237,7 @@ def polygons(
     num_squares: int,
     num_crosses: int,
     value: int,
-) -> tuple[np.ndarray, dict[str, int]]:
+) -> tuple[np.ndarray, dict[str, float], tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """Generates synthetic image by the superposition of circles, squares and crosses.
 
     Args:
@@ -241,13 +254,17 @@ def polygons(
     """
     image = np.copy(image)
 
+    circles_image = np.copy(image)
+    square_image = np.copy(image)
+    crosses_image = np.copy(image)
+
     num_grid = grid_divs
 
     grid_shape = (image.shape[0] // (num_grid + 1)), (image.shape[1] // (num_grid + 1))
 
     draw_elems = {"c": 0, "s": 0, "cr": 0}
-    draw_px = {"c": 0, "s": 0, "cr": 0}
-    used = set()
+    draw_px = {"c": 0.0, "s": 0, "cr": 0}
+    used: set[int] = set()
 
     while draw_elems["c"] < num_circles:
         grid_positions, used = grid_calculation(used, num_grid, grid_shape)
@@ -255,8 +272,8 @@ def polygons(
             5, (grid_shape[1] - 5) // 2
         )
 
-        image, area = __draw_circles(
-            image, grid_shape, grid_positions, displacement, value
+        circles_image, area = __draw_circles(
+            circles_image, grid_shape, grid_positions, displacement, value
         )
         draw_px["c"] += area
         draw_elems["c"] += 1
@@ -267,8 +284,8 @@ def polygons(
             5, (grid_shape[1] - 5) // 2
         )
 
-        image, area = __draw_square(
-            image, grid_shape, grid_positions, displacement, value
+        square_image, area = __draw_square(
+            square_image, grid_shape, grid_positions, displacement, value
         )
         draw_px["s"] += area
         draw_elems["s"] += 1
@@ -279,10 +296,13 @@ def polygons(
             5, (grid_shape[1] - 5) // 2
         )
 
-        image, area = __draw_crosses(
-            image, grid_shape, grid_positions, displacement, value
+        crosses_image, area = __draw_crosses(
+            crosses_image, grid_shape, grid_positions, displacement, value
         )
         draw_px["cr"] += area
         draw_elems["cr"] += 1
 
-    return image, draw_px
+    image = square_image + crosses_image + circles_image
+    image[image > 255] = 255
+
+    return image, draw_px, (circles_image, square_image, crosses_image)
