@@ -55,27 +55,51 @@ def equally_probable(
     return image
 
 
-def circles(image: np.ndarray, values: list[int], num_of_circles: int) -> np.ndarray:
+def circles(
+    image: np.ndarray, values: list[int], num_of_circles: int, overlapped: bool = True
+) -> np.ndarray:
     """Generates synthetic image by the superposition of circles.
 
     Args:
         image: NumPy array representing the image.
         values: List of integers with the values to draw.
         num_of_circles: Integer number of circles to draw.
+        overlapped:
 
     Returns:
         NumPy array representing the image with the circles drawn.
     """
     image = np.copy(image)
+    drawn_circles = 0
 
-    for _ in range(num_of_circles):
+    while drawn_circles < num_of_circles:
         value = random.choice(values)
 
-        center_x = random.randint(0, image.shape[0])
-        center_y = random.randint(0, image.shape[1])
-        radius = random.randint(10, min(image.shape) // 2)
+        radius = random.randint(10, min(image.shape) // 4)
 
-        image = cv2.circle(image, (center_x, center_y), radius, value, thickness=-1)
+        if overlapped:
+            center_x = random.randint(0, image.shape[0])
+            center_y = random.randint(0, image.shape[1])
+
+        else:
+            available_positions = np.where(image == 0)
+            available_positions = list(
+                zip(available_positions[0], available_positions[1])
+            )
+
+            center_x, center_y = available_positions[
+                random.randint(0, len(available_positions))
+            ]
+
+        if (
+            image[
+                max(center_y - radius, 0) : center_y + radius,
+                max(center_x - radius, 0) : center_x + radius,
+            ].max()
+            == 0
+        ) or overlapped:
+            image = cv2.circle(image, (center_x, center_y), radius, value, thickness=-1)
+            drawn_circles += 1
 
     return image
 
@@ -236,8 +260,13 @@ def polygons(
     num_circles: int,
     num_squares: int,
     num_crosses: int,
-    value: int,
-) -> tuple[np.ndarray, dict[str, float], tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    value: list[int],
+) -> tuple[
+    np.ndarray,
+    dict[str, float],
+    tuple[np.ndarray, np.ndarray, np.ndarray],
+    dict[str, int],
+]:
     """Generates synthetic image by the superposition of circles, squares and crosses.
 
     Args:
@@ -265,6 +294,7 @@ def polygons(
     draw_elems = {"c": 0, "s": 0, "cr": 0}
     draw_px = {"c": 0.0, "s": 0, "cr": 0}
     used: set[int] = set()
+    value_idx = 0
 
     while draw_elems["c"] < num_circles:
         grid_positions, used = grid_calculation(used, num_grid, grid_shape)
@@ -273,8 +303,10 @@ def polygons(
         )
 
         circles_image, area = __draw_circles(
-            circles_image, grid_shape, grid_positions, displacement, value
+            circles_image, grid_shape, grid_positions, displacement, value[value_idx]
         )
+
+        value_idx = (value_idx + 1) % len(value)
         draw_px["c"] += area
         draw_elems["c"] += 1
 
@@ -285,8 +317,11 @@ def polygons(
         )
 
         square_image, area = __draw_square(
-            square_image, grid_shape, grid_positions, displacement, value
+            square_image, grid_shape, grid_positions, displacement, value[value_idx]
         )
+
+        value_idx = (value_idx + 1) % len(value)
+
         draw_px["s"] += area
         draw_elems["s"] += 1
 
@@ -297,12 +332,15 @@ def polygons(
         )
 
         crosses_image, area = __draw_crosses(
-            crosses_image, grid_shape, grid_positions, displacement, value
+            crosses_image, grid_shape, grid_positions, displacement, value[value_idx]
         )
+
+        value_idx = (value_idx + 1) % len(value)
+
         draw_px["cr"] += area
         draw_elems["cr"] += 1
 
     image = square_image + crosses_image + circles_image
     image[image > 255] = 255
 
-    return image, draw_px, (circles_image, square_image, crosses_image)
+    return image, draw_px, (circles_image, square_image, crosses_image), draw_elems
