@@ -1,3 +1,3 @@
-# UIB XSDS
+# AIXI
 
-## eXplainable Synthetic DataSet
+## Artificial Inteligence eXplainable Insights

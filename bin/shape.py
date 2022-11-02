@@ -8,17 +8,16 @@ import random
 import cv2
 import numpy as np
 import pandas as pd
-from skimage import util
 from tqdm import auto
 
 from uib_xsds import drawing
 
-NUM_OBJECTS = 5
+NUM_OBJECTS = 2
 GRID_SIDE = 5
 
 
 def main() -> None:
-    folder = "./out/xsds_shape_count_v3/"
+    folder = "./out/aixi_shape_128/"
     info = {"train": 50000, "val": 2000}
 
     for k, v in info.items():
@@ -33,17 +32,13 @@ def main() -> None:
 
         for i in auto.tqdm(range(v)):
             image, areas, gts, counting = drawing.polygons(
-                np.zeros((512, 512)),
+                np.zeros((128, 128)),
                 GRID_SIDE,
                 random.randint(0, NUM_OBJECTS),
                 random.randint(0, NUM_OBJECTS),
                 random.randint(0, NUM_OBJECTS),
-                [random.randint(128, 255) for _ in range(15)],
+                [1],
             )
-            image = image.astype(np.float64) / 255
-            image = util.random_noise(image, "gaussian", seed=42, clip=True) * 255
-            image = image.astype(np.uint8)
-
             list_of_areas.append(areas)
             counts.append(counting)
 

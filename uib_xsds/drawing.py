@@ -56,40 +56,36 @@ def equally_probable(
 
 
 def circles(
-    image: np.ndarray, values: list[int], num_of_circles: int, overlapped: bool = True
-) -> np.ndarray:
+    image: np.ndarray,
+    values: list[int],
+    num_of_circles: int,
+    overlapped: bool = True,
+    return_count: bool = False,
+) -> np.ndarray | tuple[np.ndarray, dict]:
     """Generates synthetic image by the superposition of circles.
 
     Args:
         image: NumPy array representing the image.
         values: List of integers with the values to draw.
         num_of_circles: Integer number of circles to draw.
-        overlapped:
-
+        overlapped: Boolean indicating if the circles can be overlapped.
+        return_count: Boolean indicating if the function should return the number of circles drawn.
+        used
     Returns:
         NumPy array representing the image with the circles drawn.
     """
     image = np.copy(image)
-    drawn_circles = 0
+    count = {}
 
+    drawn_circles = 0
+    img_used = []
     while drawn_circles < num_of_circles:
         value = random.choice(values)
 
         radius = random.randint(10, min(image.shape) // 4)
 
-        if overlapped:
-            center_x = random.randint(0, image.shape[0])
-            center_y = random.randint(0, image.shape[1])
-
-        else:
-            available_positions = np.where(image == 0)
-            available_positions = list(
-                zip(available_positions[0], available_positions[1])
-            )
-
-            center_x, center_y = available_positions[
-                random.randint(0, len(available_positions))
-            ]
+        center_x = random.randint(0, image.shape[0])
+        center_y = random.randint(0, image.shape[1])
 
         if (
             image[
@@ -98,10 +94,19 @@ def circles(
             ].max()
             == 0
         ) or overlapped:
+            img_used.append(((center_x, center_y), radius, value))
+
             image = cv2.circle(image, (center_x, center_y), radius, value, thickness=-1)
             drawn_circles += 1
+            if value not in count:
+                count[value] = 0
 
-    return image
+            count[value] += 1
+
+    if return_count:
+        return image, count
+    else:
+        return image
 
 
 def __draw_circles(
@@ -127,9 +132,9 @@ def __draw_circles(
     grid_x, grid_y = grid_position
     dx, dy = displacement
 
-    radius = random.randint(10, max(int((min(grid_shape) - max(dx, dy)) // 2), 11))
+    radius = random.randint(5, max(int((min(grid_shape) - max(dx, dy)) // 2), 6))
 
-    assert (radius + max((dx, dy))) < max(grid_shape), "Circle out of cell grid"
+    assert ((radius * 2) + max((dx, dy))) <= max(grid_shape), "Circle out of cell grid"
 
     image = cv2.circle(
         image, (grid_y + dy + radius, grid_x + dx + radius), radius, value, thickness=-1
@@ -298,7 +303,7 @@ def polygons(
 
     while draw_elems["c"] < num_circles:
         grid_positions, used = grid_calculation(used, num_grid, grid_shape)
-        displacement = random.randint(15, (grid_shape[0] - 5) // 2), random.randint(
+        displacement = random.randint(5, (grid_shape[0] - 5) // 2), random.randint(
             5, (grid_shape[1] - 5) // 2
         )
 

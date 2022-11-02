@@ -11,11 +11,12 @@ from tqdm import auto
 
 from uib_xsds import drawing
 
+AREA_PX = False
+
 
 def main() -> None:
-    folder = "./out/xsds_values/"
+    folder = "./out/aixi_v_area_128_px/"
     info = {"train": 50000, "val": 2000}
-
     for k, v in info.items():
         folder_divided = folder + f"{k}/"
         folder_gt = folder_divided + "/gt/"
@@ -26,17 +27,22 @@ def main() -> None:
         counts: dict[int, list[int]] = {1: [], 2: [], 3: []}
 
         for i in auto.tqdm(range(v)):
-            image = drawing.circles(
-                np.zeros((512, 512)), [1, 2, 3], 10, overlapped=False
+            image, img_count = drawing.circles(
+                np.zeros((128, 128), dtype=np.uint8),
+                values=[1, 2, 3],
+                num_of_circles=6,
+                overlapped=False,
+                return_count=True,
             )
-            res = np.unique(image, return_counts=True)
-            img_count = dict(zip(*res))
+
+            if AREA_PX:
+                res = np.unique(image, return_counts=True)
+                img_count = dict(zip(*res))
 
             gts = []
             for key in counts.keys():
                 aux = (image == key).astype(np.uint8)
                 gts.append(aux)
-
                 if key in img_count:
                     counts[key].append(img_count[key])
                 else:

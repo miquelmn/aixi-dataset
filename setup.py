@@ -12,13 +12,13 @@ with open("requirements.txt") as fp:
     install_requires = fp.read()
 
 setup(
-    name="uib_xsds",
+    name="aixi",
     version="0.1",
     description="XSDS - Synthetic dataset",
     author="Miquel Miró Nicolau, Dr. Gabriel Moyà Alcover, Dr. Antoni Jaume-i-Capó",
     author_email="miquel.miro@uib.cat, gabriel_moya@uib.cat, antoni.jaume@uib.cat",
     license="MIT",
-    packages=["uib_xsds"],
+    packages=["aixi"],
     keywords=["XAI", "Deep Learning", "Computer Vision", "Saliency maps"],
     install_requires=install_requires,
     python_requires=">=3.10",
