@@ -1,4 +1,4 @@
-""" Generates the XSDS shape images
+""" Generates the AIXI shape images
 
 Written by: Miquel Miró Nicolau (UIB), 2022
 """
@@ -15,9 +15,15 @@ from uib_xsds import drawing
 NUM_OBJECTS = 2
 GRID_SIDE = 5
 
+AREA_PX = True
+
 
 def main() -> None:
-    folder = "./out/aixi_shape_128/"
+    if AREA_PX:
+        folder = "./out/aixi_shape_area_128_px/"
+    else:
+        folder = "./out/aixi_shape_128_px/"
+
     info = {"train": 50000, "val": 2000}
 
     for k, v in info.items():
@@ -39,6 +45,11 @@ def main() -> None:
                 random.randint(0, NUM_OBJECTS),
                 [1],
             )
+
+            if AREA_PX:
+                res = np.unique(image, return_counts=True)
+                counting = dict(zip(*res))
+
             list_of_areas.append(areas)
             counts.append(counting)
 

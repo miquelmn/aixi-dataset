@@ -227,7 +227,9 @@ def __draw_crosses(
         (dy + grid_y) : (dy + grid_y) + long_side,
     ] = value
 
-    return image, ((short_side * long_side) - short_side**2)
+    short_side, long_side = sorted((short_side, long_side))
+
+    return image, (((short_side * long_side) * 2) - short_side**2)
 
 
 def grid_calculation(
