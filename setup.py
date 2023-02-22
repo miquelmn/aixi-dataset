@@ -12,7 +12,7 @@ with open("requirements.txt") as fp:
     install_requires = fp.read()
 
 setup(
-    name="aixi",
+    name="aixi_dataset",
     version="0.1",
     description="XSDS - Synthetic dataset",
     author="Miquel Miró Nicolau, Dr. Gabriel Moyà Alcover, Dr. Antoni Jaume-i-Capó",

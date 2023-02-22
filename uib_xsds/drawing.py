@@ -267,7 +267,7 @@ def polygons(
     num_circles: int,
     num_squares: int,
     num_crosses: int,
-    value: list[int],
+    value: list[int | float],
 ) -> tuple[
     np.ndarray,
     dict[str, float],
