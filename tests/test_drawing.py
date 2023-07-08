@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from uib_xsds import drawing
+from aixi_dataset import drawing
 
 
 class TestCircles(unittest.TestCase):

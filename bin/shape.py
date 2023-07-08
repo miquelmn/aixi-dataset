@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from tqdm import auto
 
-from uib_xsds import drawing
+from aixi_dataset import drawing
 
 NUM_OBJECTS = 2
 GRID_SIDE = 5

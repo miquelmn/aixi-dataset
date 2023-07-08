@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from tqdm import auto
 
-from uib_xsds import drawing
+from aixi_dataset import drawing
 
 AREA_PX = False
 

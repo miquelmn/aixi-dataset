@@ -296,7 +296,7 @@ def polygons(
 
     num_grid = grid_divs
 
-    grid_shape = (image.shape[0] // (num_grid + 1)), (image.shape[1] // (num_grid + 1))
+    grid_shape = (image.shape[0] // num_grid), (image.shape[1] // num_grid)
 
     draw_elems = {"c": 0, "s": 0, "cr": 0}
     draw_px = {"c": 0.0, "s": 0, "cr": 0}
