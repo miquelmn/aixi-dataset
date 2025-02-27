@@ -9,20 +9,20 @@ import random
 import cv2
 import numpy as np
 import pandas as pd
-from tqdm import auto
+from tqdm.auto import tqdm
 
 from aixi_dataset import drawing
 
-NUM_OBJECTS = 2
+NUM_OBJECTS = 2  # Per forma
 GRID_SIDE = 5
 
 AREA_PX = False
-TEXTURE_BG = [["./in/texture.jpg"], glob.glob("./in/textures/**/*.jpg"), None][1]
-SIZE_IMG = (256, 256)
+TEXTURE_BG = [["./in/texture.jpg"], glob.glob("./in/textures/**/*.jpg"), None][-1]
+SIZE_IMG = (128, 128)
 
 
 def main() -> None:
-    folder = "./out/aixi_shape_256"
+    folder = f"./out/aixi_shape_{SIZE_IMG[0]}"
 
     if AREA_PX:
         folder += "_area"
@@ -41,7 +41,7 @@ def main() -> None:
         os.makedirs(folder, exist_ok=True)
         os.makedirs(folder_gt, exist_ok=True)
 
-        for i in auto.tqdm(range(v)):
+        for i in tqdm(range(v), desc=f"Generant imatges de {k}"):
             if TEXTURE_BG is not None:
                 texture_path = random.choice(TEXTURE_BG)
                 background = cv2.imread(texture_path, cv2.IMREAD_GRAYSCALE)

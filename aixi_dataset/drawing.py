@@ -4,11 +4,14 @@ Written by: Miquel Miró Nicolau (UIB), 2022
 """
 import math
 import random
+import warnings
 
 import cv2
 import numpy as np
 
 random.seed(42)
+
+ITER_MAX = 1000
 
 
 def equally_probable(
@@ -61,6 +64,8 @@ def circles(
     num_of_circles: int,
     overlapped: bool = True,
     return_count: bool = False,
+    margin: int = 0,
+    max_iter: int = -1,
 ) -> np.ndarray | tuple[np.ndarray, dict]:
     """Generates synthetic image by the superposition of circles.
 
@@ -70,7 +75,9 @@ def circles(
         num_of_circles: Integer number of circles to draw.
         overlapped: Boolean indicating if the circles can be overlapped.
         return_count: Boolean indicating if the function should return the number of circles drawn.
-        used
+            used
+        margin: Integer, space between different objects. Default=0.
+        max_iter: Integer, maximum number of tries
     Returns:
         NumPy array representing the image with the circles drawn.
     """
@@ -79,7 +86,8 @@ def circles(
 
     drawn_circles = 0
     img_used = []
-    while drawn_circles < num_of_circles:
+    iterations = 0
+    while (drawn_circles < num_of_circles) and (iterations < max_iter or max_iter < 0):
         value = random.choice(values)
 
         radius = random.randint(10, min(image.shape) // 4)
@@ -87,10 +95,12 @@ def circles(
         center_x = random.randint(0, image.shape[0])
         center_y = random.randint(0, image.shape[1])
 
+        radius_and_margin = radius + margin
+
         if (
             image[
-                max(center_y - radius, 0) : center_y + radius,
-                max(center_x - radius, 0) : center_x + radius,
+                max(center_y - radius_and_margin, 0) : center_y + radius_and_margin,
+                max(center_x - radius_and_margin, 0) : center_x + radius_and_margin,
             ].max()
             == 0
         ) or overlapped:
@@ -102,7 +112,7 @@ def circles(
                 count[value] = 0
 
             count[value] += 1
-
+        iterations = iterations + 1
     if return_count:
         return image, count
     else:
@@ -137,7 +147,11 @@ def __draw_circles(
     assert ((radius * 2) + max((dx, dy))) <= max(grid_shape), "Circle out of cell grid"
 
     image = cv2.circle(
-        image, (grid_y + dy + radius, grid_x + dx + radius), radius, value, thickness=-1
+        image,
+        (grid_y + dy + (radius // 2), grid_x + dx + (radius // 2)),
+        radius,
+        value,
+        thickness=-1,
     )
 
     return image, math.pi * (radius**2)
@@ -173,7 +187,16 @@ def __draw_square(
 
     side = random.randint(5, max(max(grid_shape) - min_distance, 6))
 
-    image[dx + grid_x : dx + grid_x + side, dy + grid_y : dy + grid_y + side] = value
+    pos_x = (
+        max((dx + grid_x - (side // 2)), 0),
+        min(dx + grid_x + (side // 2), image.shape[0]),
+    )
+    pos_y = (
+        max((dy + grid_y - (side // 2)), 0),
+        min(dy + grid_y + (side // 2), image.shape[1]),
+    )
+
+    image[pos_x[0] : pos_x[1], pos_y[0] : pos_y[1]] = value
 
     return image, side**2
 
@@ -247,8 +270,15 @@ def grid_calculation(
         Set of integers representing the positions already used.
     """
     i = random.randint(0, (num_grid**2) - 1)
-    while i in used:
-        i = random.randint(0, num_grid**2)
+
+    tries = 0
+    while (i in used) and (tries < ITER_MAX):
+        i = random.randint(0, (num_grid**2) - 1)
+        tries += 1
+
+    if tries == ITER_MAX:
+        warnings.warn("Max iteration tried")
+        return (None, None), used
 
     used.add(i)
 

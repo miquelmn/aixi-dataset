@@ -3,7 +3,7 @@ repos:
     rev: v2.19.4
     hooks:
       - id: pyupgrade
-        args: [ "--py310-plus" ]
+        args: [ "--py312-plus" ]
   - repo: https://github.com/pre-commit/mirrors-isort
     rev: 1ba6bfc # Use the revision sha / tag you want to point at
     hooks:
