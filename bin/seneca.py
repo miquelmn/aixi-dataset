@@ -11,6 +11,10 @@ from tqdm.auto import tqdm
 import numpy as np
 import cv2
 
+
+random.seed(42)
+np.random.seed(42)
+
 SIZE_IMG = (32, 32, 3)
 SIZE_CELL = (4, 4)
 SIZE_PATTERN = (8, 8)
@@ -87,6 +91,8 @@ def main():
     info = {"train": 2000, "val": 1000}
 
     gt_pattern = generate_pattern(SIZE_PATTERN, SIZE_CELL)
+    cv2.imwrite(folder + "gt_pattern.png", gt_pattern * 255)
+
     for k, v in info.items():
         folder_divided = folder + f"/{k}/"
         folder_gt = folder_divided + "/gt/"
@@ -119,12 +125,19 @@ def main():
                 resultat[pos_pattern // size, :, pos_pattern % size, :, :] = 0
                 resultat[pos_pattern // size, :, pos_pattern % size, :, :] = gt_pattern
 
-                gt_sal_map[pos_pattern // size, :, pos_pattern % size, :] = np.sum(gt_pattern > 0, axis=-1)
             resultat = resultat.reshape(SIZE_IMG)
             gt_sal_map = gt_sal_map.reshape((SIZE_IMG[0], SIZE_IMG[1]))
 
-            cv2.imwrite(folder_divided + f"{str(i).zfill(5)}_{contains_pattern}.png", resultat)
-            cv2.imwrite(folder_gt + f"{str(i).zfill(5)}.png", gt_sal_map)
+            res = cv2.matchTemplate(resultat.astype(np.uint8), gt_pattern.astype(np.uint8), cv2.TM_CCOEFF_NORMED)
+            loc = np.where(res >= 0.9)
+
+            contains_pattern = int(len(loc[0]) > 0)
+            for pt in zip(*loc):
+                gt_sal_map[pt[0]:pt[0] + gt_pattern.shape[0], pt[1]:pt[1] + gt_pattern.shape[1]] = np.sum(
+                    gt_pattern > 0, axis=-1)
+
+            cv2.imwrite(folder_divided + f"{str(i).zfill(5)}_{contains_pattern}.png", resultat * 255)
+            cv2.imwrite(folder_gt + f"{str(i).zfill(5)}.png", gt_sal_map * 255)
 
 
 if __name__ == '__main__':
