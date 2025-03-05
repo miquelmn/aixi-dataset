@@ -11,7 +11,6 @@ from tqdm.auto import tqdm
 import numpy as np
 import cv2
 
-
 random.seed(42)
 np.random.seed(42)
 
@@ -86,6 +85,37 @@ def generate_pattern(pattern_size, cell_size):
     return mask
 
 
+def find_pattern(image, pattern):
+    def __find_simple_pattern(image, pattern):
+        sal_map = np.zeros((image.shape[0], image.shape[1]))
+
+        res = cv2.matchTemplate(image.astype(np.uint8), pattern.astype(np.uint8), cv2.TM_CCOEFF_NORMED)
+        loc = np.where(res >= 0.9)
+
+        contains_pattern = int(len(loc[0]) > 0)
+        for pt in zip(*loc):
+            sal_map[pt[0]:pt[0] + pattern.shape[0], pt[1]:pt[1] + pattern.shape[1]] = np.sum(pattern > 0, axis=-1)
+
+        return sal_map, contains_pattern
+
+    sal_map, contains_pattern = __find_simple_pattern(image, pattern)
+
+    pattern_binary = np.sum(pattern, axis=-1) # Si existeix al patró original un 0 pot haver-hi perturbació constructiva
+    if pattern_binary.min() == 0:
+        for i in range(3):
+            pattern_aux = np.copy(pattern)
+            pattern_aux[:, :, i][pattern_binary == 0] = 1 # Cream patró que pot generar perturbació constructiva.
+
+            sal_map_aux, constructive_pattern = __find_simple_pattern(image, pattern_aux)
+
+            contains_pattern += constructive_pattern
+            sal_map = sal_map + sal_map_aux
+
+        sal_map[sal_map > 0] = 1
+
+    return sal_map, contains_pattern
+
+
 def main():
     folder = f"./out/seneca_sp_{SIZE_PATTERN}_sc_{SIZE_CELL}/"
     info = {"train": 2000, "val": 1000}
@@ -116,7 +146,6 @@ def main():
                         resultat[pos_x, :, pos_y, :, :] = generate_pattern(SIZE_PATTERN, SIZE_CELL)
 
             contains_pattern = random.randint(0, 1)
-            gt_sal_map = np.zeros((H // h, h, W // w, w))
 
             if contains_pattern:
                 pos_pattern = random.randint(0, (resultat.shape[0] * resultat.shape[2]) - 1)
@@ -126,15 +155,7 @@ def main():
                 resultat[pos_pattern // size, :, pos_pattern % size, :, :] = gt_pattern
 
             resultat = resultat.reshape(SIZE_IMG)
-            gt_sal_map = gt_sal_map.reshape((SIZE_IMG[0], SIZE_IMG[1]))
-
-            res = cv2.matchTemplate(resultat.astype(np.uint8), gt_pattern.astype(np.uint8), cv2.TM_CCOEFF_NORMED)
-            loc = np.where(res >= 0.9)
-
-            contains_pattern = int(len(loc[0]) > 0)
-            for pt in zip(*loc):
-                gt_sal_map[pt[0]:pt[0] + gt_pattern.shape[0], pt[1]:pt[1] + gt_pattern.shape[1]] = np.sum(
-                    gt_pattern > 0, axis=-1)
+            gt_sal_map, contains_pattern = find_pattern(resultat, gt_pattern)
 
             cv2.imwrite(folder_divided + f"{str(i).zfill(5)}_{contains_pattern}.png", resultat * 255)
             cv2.imwrite(folder_gt + f"{str(i).zfill(5)}.png", gt_sal_map * 255)
