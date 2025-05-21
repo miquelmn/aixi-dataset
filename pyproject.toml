@@ -1,16 +1,15 @@
 [build-system]
-requires = ["setuptools >= 65.5.1", "wheel"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "mmn_experiments"
+requires-python = ">=3.8"
 description = "Scripts for the generation of AIXI and TXUXI datasets"
 readme = "README.md"
-version = "1.5.1"
-authors = [
-    { name = "Miquel Miró Nicolau", email = "miquel.miro@uib.cat"},
-    { name = "Gabriel Moyà Alcover", email = "gabriel.moya@uib.es"},
-    { name = "Antoni Jaume-i-Capó", email = "antoni.jaume@uib.es"}
+version = "1.6.0"
+maintainers = [
+    { name = "Dr. Miquel Miró Nicolau", email = "miquel.miro@uib.cat" },
 ]
 keywords = ["explanaible", "XAI", "machine learning"]
 dependencies = [
@@ -22,9 +21,12 @@ dependencies = [
     'tqdm',
 
 ]
+license="MIT"
+dynamic = ["dependencies"]
 
-requires-python = ">=3.8"
 
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
 [project.urls]
 Homepage = "https://github.com/miquelmn/aixi-dataset"

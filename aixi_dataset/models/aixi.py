@@ -1,7 +1,8 @@
-""" Module containing the Network definition used in the AIXI method.
+"""Module containing the Network definition used in the AIXI method.
 
 Written by: Miquel Miró Nicolau (UIB), 2022
 """
+
 import torch
 from torch import nn
 

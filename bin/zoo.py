@@ -1,11 +1,11 @@
 import os
-import math
 import random
 from glob import glob
 
 import cv2
 import numpy as np
 from tqdm.auto import tqdm
+import pandas as pd
 
 N_IMAGES = {"train": 50000, "val": 2000}
 SIL_4_IMG = 4
@@ -17,6 +17,7 @@ SEED = 42
 
 random.seed(SEED)
 np.random.seed(SEED)
+
 
 def image_resize(image, size, inter=cv2.INTER_AREA):
     h, w = image.shape[:2]
@@ -32,10 +33,11 @@ def create_image(silhouette_paths, img_size, sil_4_image, sil_size):
     cat_map = np.zeros(img_size[:2])
     dog_map = np.zeros_like(cat_map)
 
-    grid_positions = np.arange(GRID_SIZE ** 2)
+    grid_positions = np.arange(GRID_SIZE**2)
     chosen_positions = np.random.choice(grid_positions, sil_4_image, replace=False)
 
-    for i in range(chosen_positions):
+    gt_data = {"cat": 0, "dog": 1}
+    for i in chosen_positions:
         path = random.choice(silhouette_paths)
         cat = os.path.basename(path)[0].isupper()  # Boolean for class
 
@@ -49,22 +51,24 @@ def create_image(silhouette_paths, img_size, sil_4_image, sil_size):
         pad_right = sil_size - sil.shape[1] - pad_left
 
         sil = cv2.copyMakeBorder(
-            sil, pad_top, pad_bottom, pad_left, pad_right,
-            cv2.BORDER_CONSTANT, value=0
+            sil, pad_top, pad_bottom, pad_left, pad_right, cv2.BORDER_CONSTANT, value=0
         )
 
         row, col = (i // GRID_SIZE) * sil_size, (i % GRID_SIZE) * sil_size
-        mask = sil > 0  # Faster boolean mask
+        mask = np.sum(sil, axis=-1)
+        mask = mask > 0  # Faster boolean mask
 
         if cat:
-            cat_map[row:row + sil_size, col:col + sil_size][mask] = 1
+            gt_data["cat"] += 1
+            cat_map[row : row + sil_size, col : col + sil_size][mask] = 1
         else:
-            dog_map[row:row + sil_size, col:col + sil_size][mask] = 1
+            gt_data["dog"] += 1
+            dog_map[row : row + sil_size, col : col + sil_size][mask] = 1
 
-        image[row:row + sil_size, col:col + sil_size, :] = sil
+        image[row : row + sil_size, col : col + sil_size, :] = sil
 
     gt = np.dstack((cat_map, dog_map, np.zeros_like(cat_map, dtype=np.uint8)))
-    return image, gt
+    return image, gt, gt_data
 
 
 def main():
@@ -79,7 +83,6 @@ def main():
     dog_path = random.sample(dog_path, len(cat_path))
     silhouette_paths = dog_path + cat_path
 
-
     for phase, n_images in N_IMAGES.items():
         out_path = os.path.join("..", "out", "zaixi", phase)
         gt_path = os.path.join(out_path, "gt")
@@ -87,13 +90,23 @@ def main():
         os.makedirs(out_path, exist_ok=True)
         os.makedirs(gt_path, exist_ok=True)
 
+        gt_info = []
+
         for img_idx in tqdm(range(n_images), desc=f"Phase {phase}"):
-            image, gt = create_image(silhouette_paths, IMG_SIZE, SIL_4_IMG, SIL_SIZE)
+            image, gt, gt_data = create_image(
+                silhouette_paths, IMG_SIZE, SIL_4_IMG, SIL_SIZE
+            )
 
             filename = f"{img_idx:06d}.png"
 
             cv2.imwrite(os.path.join(out_path, filename), image)
             cv2.imwrite(os.path.join(os.path.join(gt_path, filename)), gt)
 
-if __name__ == '__main__':
+            gt_info.append(gt_data)
+
+        df = pd.DataFrame(gt_info)
+        df.to_csv(out_path + "dades.csv", sep=";")
+
+
+if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
-""" Suite of tests for the drawing module.
+"""Suite of tests for the drawing module.
 
 Written by: Miquel Miró Nicolau (UIB), 2022
 """
+
 import unittest
 
 import numpy as np

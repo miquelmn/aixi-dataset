@@ -1,7 +1,8 @@
-""" Module containing multiple drawing functions.
+"""Module containing multiple drawing functions.
 
 Written by: Miquel Miró Nicolau (UIB), 2022
 """
+
 import math
 import random
 import warnings
@@ -146,9 +147,10 @@ def __draw_circles(
 
     assert ((radius * 2) + max((dx, dy))) <= max(grid_shape), "Circle out of cell grid"
 
+    center = (grid_y + dy + (radius // 2), grid_x + dx + (radius // 2))
     image = cv2.circle(
         image,
-        (grid_y + dy + (radius // 2), grid_x + dx + (radius // 2)),
+        center,
         radius,
         value,
         thickness=-1,
@@ -201,6 +203,42 @@ def __draw_square(
     return image, side**2
 
 
+def __draw_cross(
+    shape_img, positions, size, value
+):
+    """Draw a cross.
+
+    Args:
+        shape_img: Tuple, shape of the image.
+        positions: Tuple, center of the cross.
+        size: Tuple, sizes of the cross.
+        value: Integer with the value.
+
+    Returns:
+        Numpy array with a cross.
+    """
+    image = np.zeros(shape_img)
+    image[
+        positions[0] : positions[0] + size[0],
+        positions[1]
+        + (size[0] // 2)
+        - (size[1] // 2) : positions[1]
+        + (size[1] // 2)
+        + (size[0] // 2),
+    ] = value
+
+    image[
+        positions[0]
+        + (size[0] // 2)
+        - (size[1] // 2) : positions[0]
+        + (size[1] // 2)
+        + (size[0] // 2),
+        positions[1] : positions[1] + size[0],
+    ] = value
+
+    return image
+
+
 def __draw_crosses(
     image: np.ndarray,
     grid_shape: tuple[int, int],
@@ -229,28 +267,12 @@ def __draw_crosses(
     else:
         min_distance = min((dx, dy))
 
-    long_side = random.randint(1, max(grid_shape) - min_distance)
-    short_side = random.randint(5, max(6, long_side // 2))
+    long_side = random.randint(10, max(grid_shape) - min_distance)
+    short_side = long_side // 2  # random.randint(10, max(15, long_side // 2))
 
-    image[
-        (dx + grid_x) : (dx + grid_x) + long_side,
-        (dy + grid_y)
-        + (long_side // 2)
-        - (short_side // 2) : (dy + grid_y)
-        + (short_side // 2)
-        + (long_side // 2),
-    ] = value
-
-    image[
-        (dx + grid_x)
-        + (long_side // 2)
-        - (short_side // 2) : (dx + grid_x)
-        + (short_side // 2)
-        + (long_side // 2),
-        (dy + grid_y) : (dy + grid_y) + long_side,
-    ] = value
-
-    short_side, long_side = sorted((short_side, long_side))
+    image = image + __draw_cross(
+        image.shape, ((dx + grid_x), (dy + grid_y)), (long_side, short_side), value
+    )
 
     return image, (((short_side * long_side) * 2) - short_side**2)
 
@@ -298,12 +320,7 @@ def polygons(
     num_squares: int,
     num_crosses: int,
     value: list[int | float],
-) -> tuple[
-    np.ndarray,
-    dict[str, float],
-    tuple[np.ndarray, np.ndarray, np.ndarray],
-    dict[str, int],
-]:
+) -> tuple[np.ndarray, dict[str, float], tuple, dict[str, int], bool]:
     """Generates synthetic image by the superposition of circles, squares and crosses.
 
     Args:
@@ -320,11 +337,10 @@ def polygons(
     """
     image = np.copy(image)
 
-    circles_image = np.copy(image)
-    square_image = np.copy(image)
-    crosses_image = np.copy(image)
+    figure_image = {"c": np.copy(image), "s": np.copy(image), "cr": np.copy(image)}
 
     num_grid = grid_divs
+    num_figures = {"c": num_circles, "s": num_squares, "cr": num_crosses}
 
     grid_shape = (image.shape[0] // num_grid), (image.shape[1] // num_grid)
 
@@ -333,51 +349,31 @@ def polygons(
     used: set[int] = set()
     value_idx = 0
 
-    while draw_elems["c"] < num_circles:
-        grid_positions, used = grid_calculation(used, num_grid, grid_shape)
-        displacement = random.randint(5, (grid_shape[0] - 5) // 2), random.randint(
-            5, (grid_shape[1] - 5) // 2
-        )
+    for (key, num_figure), draw_fn in zip(
+        num_figures.items(), (__draw_circles, __draw_square, __draw_crosses)
+    ):
+        while draw_elems[key] < num_figure:
+            grid_positions, used = grid_calculation(used, num_grid, grid_shape)
+            displacement = random.randint(5, (grid_shape[0] - 5) // 2), random.randint(
+                5, (grid_shape[1] - 5) // 2
+            )
 
-        circles_image, area = __draw_circles(
-            circles_image, grid_shape, grid_positions, displacement, value[value_idx]
-        )
+            figure_image[key], area = draw_fn(
+                figure_image[key],
+                grid_shape,
+                grid_positions,
+                displacement,
+                value[value_idx],
+            )
 
-        value_idx = (value_idx + 1) % len(value)
-        draw_px["c"] += area
-        draw_elems["c"] += 1
+            value_idx = (value_idx + 1) % len(value)
+            draw_px[key] += area
+            draw_elems[key] += 1
 
-    while draw_elems["s"] < num_squares:
-        grid_positions, used = grid_calculation(used, num_grid, grid_shape)
-        displacement = random.randint(5, (grid_shape[0] - 5) // 2), random.randint(
-            5, (grid_shape[1] - 5) // 2
-        )
+    for fig_img in figure_image.values():
+        image = image + fig_img
 
-        square_image, area = __draw_square(
-            square_image, grid_shape, grid_positions, displacement, value[value_idx]
-        )
-
-        value_idx = (value_idx + 1) % len(value)
-
-        draw_px["s"] += area
-        draw_elems["s"] += 1
-
-    while draw_elems["cr"] < num_crosses:
-        grid_positions, used = grid_calculation(used, num_grid, grid_shape)
-        displacement = random.randint(5, (grid_shape[0] - 5) // 2), random.randint(
-            5, (grid_shape[1] - 5) // 2
-        )
-
-        crosses_image, area = __draw_crosses(
-            crosses_image, grid_shape, grid_positions, displacement, value[value_idx]
-        )
-
-        value_idx = (value_idx + 1) % len(value)
-
-        draw_px["cr"] += area
-        draw_elems["cr"] += 1
-
-    image = square_image + crosses_image + circles_image
+    overlapped = image.max() > max(value)
     image[image > 255] = 255
 
-    return image, draw_px, (circles_image, square_image, crosses_image), draw_elems
+    return image, draw_px, tuple(figure_image.values()), draw_elems, overlapped

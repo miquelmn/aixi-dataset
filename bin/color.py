@@ -1,7 +1,8 @@
-""" Main module, generates the images
+"""Main module, generates the images
 
 Written by: Miquel Miró Nicolau (UIB), 2022
 """
+
 import os
 
 import cv2
