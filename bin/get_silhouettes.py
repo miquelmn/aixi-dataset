@@ -1,3 +1,7 @@
+""" Module to generate silhouettes from annotations and images.
+
+Written by: Miquel Miró Nicolau (UIB), 2025
+"""
 import os
 from glob import glob
 from PIL import Image

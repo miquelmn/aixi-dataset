@@ -1,4 +1,4 @@
-"""Main module, generates the images
+""" Generates the images of AIXI-Color
 
 Written by: Miquel Miró Nicolau (UIB), 2022
 """
