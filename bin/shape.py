@@ -1,7 +1,8 @@
-""" Generates the AIXI shape images
+"""Generates the AIXI shape images
 
 Written by: Miquel Miró Nicolau (UIB), 2022
 """
+
 import glob
 import os
 import random
@@ -9,7 +10,6 @@ import random
 import cv2
 import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm
 
 from aixi_dataset import drawing
 
@@ -41,7 +41,8 @@ def main() -> None:
         os.makedirs(folder, exist_ok=True)
         os.makedirs(folder_gt, exist_ok=True)
 
-        for i in tqdm(range(v), desc=f"Generant imatges de {k}"):
+        i = 0
+        while i < v:
             if TEXTURE_BG is not None:
                 texture_path = random.choice(TEXTURE_BG)
                 background = cv2.imread(texture_path, cv2.IMREAD_GRAYSCALE)
@@ -51,7 +52,7 @@ def main() -> None:
             else:
                 background = np.zeros(SIZE_IMG)
 
-            image, areas, gts, counting = drawing.polygons(
+            image, areas, gts, counting, overlapped = drawing.polygons(
                 np.zeros(SIZE_IMG),
                 GRID_SIDE,
                 random.randint(0, NUM_OBJECTS),
@@ -60,16 +61,19 @@ def main() -> None:
                 [1],
             )
 
-            image = image + background
-            image[image > 1] = 1
+            if not overlapped:
+                image = image + background
+                image[image > 1] = 1
 
-            if AREA_PX:
-                counting = areas
+                if AREA_PX:
+                    counting = areas
 
-            counts.append(counting)
+                counts.append(counting)
 
-            cv2.imwrite(folder_divided + f"{str(i).zfill(5)}.png", image * 255)
-            cv2.imwrite(folder_gt + f"{str(i).zfill(5)}.png", np.dstack(gts))
+                cv2.imwrite(folder_divided + f"{str(i).zfill(5)}.png", image * 255)
+                cv2.imwrite(folder_gt + f"{str(i).zfill(5)}.png", np.dstack(gts))
+                i += 1
+                print(f"Image {i} / {v} saved")
 
         df = pd.DataFrame(counts)
         df.to_csv(folder_divided + "dades.csv", sep=";")
