@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from aixi_dataset import drawing
+from aixi_dataset import generate_figs
 
 NUM_OBJECTS = 2  # Per forma
 GRID_SIDE = 5
@@ -52,7 +52,7 @@ def main() -> None:
             else:
                 background = np.zeros(SIZE_IMG)
 
-            image, areas, gts, counting, overlapped = drawing.polygons(
+            image, areas, gts, counting, overlapped = generate_figs.polygons(
                 np.zeros(SIZE_IMG),
                 GRID_SIDE,
                 random.randint(0, NUM_OBJECTS),

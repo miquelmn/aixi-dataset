@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from aixi_dataset import drawing
+from aixi_dataset import generate_figs
 
 
 class TestCircles(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestCircles(unittest.TestCase):
         size: tuple[int, int], values: list[int], n_circles: int
     ) -> np.ndarray:
         image = np.zeros(size)
-        image = drawing.circles(image, values, num_of_circles=n_circles)
+        image = generate_figs.circles(image, values, num_of_circles=n_circles)
 
         return image
 

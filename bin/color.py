@@ -1,4 +1,4 @@
-""" Generates the images of AIXI-Color
+"""Generates the images of AIXI-Color
 
 Written by: Miquel Miró Nicolau (UIB), 2022
 """
@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 
-from aixi_dataset import drawing
+from aixi_dataset import random_figs
 
 AREA_PX = False
 NORMALIZE_VALUES = True
@@ -34,7 +34,7 @@ def main() -> None:
         counts = {k: [] for k in values}  # {1: [], 2: [], 3: []}
 
         for i in tqdm(range(v)):
-            image, img_count = drawing.circles(
+            image, img_count = random_figs.circles(
                 np.zeros((128, 128), dtype=np.float32),
                 values=values,
                 num_of_circles=6,

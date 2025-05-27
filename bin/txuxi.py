@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from tqdm import auto
 
-from aixi_dataset import drawing
+from aixi_dataset import generate_figs
 
 BACKGROUNDS = [
     None,
@@ -79,7 +79,7 @@ def main(
             else:
                 background: np.ndarray = np.zeros(size_img)
 
-            image, areas, gts, counting, overlapped = drawing.polygons(
+            image, areas, gts, counting, overlapped = generate_figs.polygons(
                 np.zeros(size_img),
                 grid_side,
                 random.randint(0, num_objects),
