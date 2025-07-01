@@ -1,8 +1,13 @@
+"""Module for the figure generation
+
+Written by Miquel Miró Nicolau, 2025
+"""
+
+import math
 import random
 import warnings
 
 import cv2
-import math
 import numpy as np
 from aixi_dataset import random_figs
 
@@ -212,5 +217,5 @@ def circles(
         iterations = iterations + 1
     if return_count:
         return image, count
-    else:
-        return image
+
+    return image
