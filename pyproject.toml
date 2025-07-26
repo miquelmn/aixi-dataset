@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mmn_experiments"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 description = "Scripts for the generation of AIXI and TXUXI datasets"
 readme = "README.md"
 version = "1.6.0"
@@ -12,21 +12,15 @@ maintainers = [
     { name = "Dr. Miquel Miró Nicolau", email = "miquel.miro@uib.cat" },
 ]
 keywords = ["explanaible", "XAI", "machine learning"]
-dependencies = [
-    'opencv-python',
-    'matplotlib',
-    'pandas',
-    'numpy',
-    'scikit_image',
-    'tqdm',
-
-]
 license="MIT"
-dynamic = ["dependencies"]
+dependencies = [
+    "opencv-python==4.11.0.86",
+    "pandas==2.2.3",
+    "pillow==11.2.1",
+    "torch==2.7.0",
+    "tqdm==4.67.1",
+]
 
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
 
 [project.urls]
 Homepage = "https://github.com/miquelmn/aixi-dataset"
